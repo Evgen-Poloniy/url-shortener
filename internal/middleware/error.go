@@ -28,6 +28,7 @@ var httpStatusMap = map[domain.ErrCode]int{
 	domain.CodeValidationError:    http.StatusBadRequest,
 	domain.CodeURLNotFound:        http.StatusNotFound,
 	domain.CodeURLConflict:        http.StatusConflict,
+	domain.CodeInternal:           http.StatusInternalServerError,
 }
 
 func ErrorHandler() gin.HandlerFunc {

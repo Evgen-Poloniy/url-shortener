@@ -28,4 +28,5 @@ var (
 	ErrInvalidAPIKey     = errors.New("invalid API-Key")
 	ErrURLNotFound       = errors.New("URL not found")
 	ErrURLConflict       = errors.New("url already exists")
+	ErrDatabase          = errors.New("database error")
 )
