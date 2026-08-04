@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/Evgen-Poloniy/url-shortener/internal/config"
-	pg "github.com/Evgen-Poloniy/url-shortener/internal/repository/postgres"
+	"github.com/Evgen-Poloniy/url-shortener/internal/repository/memory"
 	httpserver "github.com/Evgen-Poloniy/url-shortener/internal/server/http"
 	"github.com/Evgen-Poloniy/url-shortener/internal/service/shortener"
 	router "github.com/Evgen-Poloniy/url-shortener/internal/transport/http"
@@ -66,7 +66,7 @@ func Run() {
 	}()
 
 	// Layers initialization.
-	repository := pg.NewPostgresRepository(db)
+	repository := memory.NewMemoryRepository()
 	service := shortener.NewShortenerService(repository)
 	v1Handler := v1.NewHandler(service, &config.Auth)
 	router := router.NewRouter(&config.CORS, logger)

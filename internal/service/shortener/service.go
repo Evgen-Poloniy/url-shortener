@@ -14,6 +14,11 @@ import (
 
 // ShortenerRepository represents interface for work with URL shortener repository
 type ShortenerRepository interface {
+	// SaveURL saves full and short URLs into repository.
+	SaveURL(ctx context.Context, full, short string) error
+
+	// GetFullURL gets full URL from repository.
+	GetFullURL(ctx context.Context, short string) (string, error)
 }
 
 type ShortenerService struct {
