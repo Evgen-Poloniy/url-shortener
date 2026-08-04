@@ -10,4 +10,5 @@ const (
 	CodeValidationError    ErrCode = "VALIDATION_ERROR"
 	CodeURLNotFound        ErrCode = "URL_NOT_FOUND"
 	CodeURLConflict        ErrCode = "URL_ALREADY_EXIST"
+	CodeInternal           ErrCode = "INTERNAL_ERROR"
 )

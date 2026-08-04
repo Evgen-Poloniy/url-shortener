@@ -13,6 +13,7 @@ import (
 
 	"github.com/Evgen-Poloniy/url-shortener/internal/config"
 	"github.com/Evgen-Poloniy/url-shortener/internal/repository/memory"
+	pg "github.com/Evgen-Poloniy/url-shortener/internal/repository/postgres"
 	httpserver "github.com/Evgen-Poloniy/url-shortener/internal/server/http"
 	"github.com/Evgen-Poloniy/url-shortener/internal/service/shortener"
 	router "github.com/Evgen-Poloniy/url-shortener/internal/transport/http"
@@ -30,6 +31,11 @@ func Run() {
 		logrus.Fatalf("error when loading env CONFIG_PATH")
 	}
 
+	storageType := os.Getenv("STORAGE_TYPE")
+	if storageType == "" {
+		logrus.Warn("env STORAGE is not set. Is used STORAGE_TYPE=memory")
+	}
+
 	config, err := config.LoadConfig(configPath)
 	if err != nil {
 		logrus.Fatalf("error when loading config: %v", err)
@@ -40,33 +46,49 @@ func Run() {
 		logs.WithFormat(config.Logger.Format),
 	)
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		config.Postgres.Host,
-		config.Postgres.Port,
-		config.Postgres.Username,
-		config.Postgres.Password,
-		config.Postgres.DBName,
-		config.Postgres.SSLMode,
-	)
-
-	db, err := postgres.NewPostgreSQL(
-		dsn,
-		postgres.WithMaxOpenConns(config.Postgres.MaxOpenConns),
-		postgres.WithMaxIdleConns(config.Postgres.MaxIdleConns),
-		postgres.WithConnMaxLifetime(config.Postgres.ConnMaxLifetime),
-		postgres.WithConnMaxIdleLifetime(config.Postgres.ConnMaxIdleLifetime),
-	)
-	if err != nil {
-		logger.Fatalf("database error: %v", err)
-	}
-	defer func() {
-		if err := db.Close(); err != nil {
-			logger.Errorf("database error: %v", err)
-		}
-	}()
-
 	// Layers initialization.
-	repository := memory.NewMemoryRepository()
+
+	var repository shortener.ShortenerRepository
+
+	// Repository type choice.
+	switch storageType {
+	case "postgres":
+		dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+			config.Postgres.Host,
+			config.Postgres.Port,
+			config.Postgres.Username,
+			config.Postgres.Password,
+			config.Postgres.DBName,
+			config.Postgres.SSLMode,
+		)
+
+		db, err := postgres.NewPostgreSQL(
+			dsn,
+			postgres.WithMaxOpenConns(config.Postgres.MaxOpenConns),
+			postgres.WithMaxIdleConns(config.Postgres.MaxIdleConns),
+			postgres.WithConnMaxLifetime(config.Postgres.ConnMaxLifetime),
+			postgres.WithConnMaxIdleLifetime(config.Postgres.ConnMaxIdleLifetime),
+		)
+		if err != nil {
+			logger.Fatalf("database error: %v", err)
+		}
+		defer func() {
+			if err := db.Close(); err != nil {
+				logger.Errorf("database error: %v", err)
+			}
+		}()
+
+		repository = pg.NewPostgresRepository(db)
+		logger.Info("is used postgres repository type")
+
+	case "memory":
+		repository = memory.NewMemoryRepository()
+		logger.Info("is used memory repository type")
+
+	default:
+		logger.Fatalln("unknown repository type")
+	}
+
 	service := shortener.NewShortenerService(repository)
 	v1Handler := v1.NewHandler(service, &config.Auth)
 	router := router.NewRouter(&config.CORS, logger)

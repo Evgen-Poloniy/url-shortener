@@ -31,7 +31,7 @@ unit-test:
 	go tool cover -func=coverage.out
 .PHONY: unit-test
 
-cover-html:
+test-html:
 	go tool cover -html=coverage.out
 .PHONY: cover-html
 
