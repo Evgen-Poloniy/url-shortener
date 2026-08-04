@@ -26,4 +26,6 @@ func NewAppError(code ErrCode, message string, err error) *AppError {
 var (
 	ErrMissingAuthHeader = errors.New("missing authentication header")
 	ErrInvalidAPIKey     = errors.New("invalid API-Key")
+	ErrURLNotFound       = errors.New("URL not found")
+	ErrURLConflict       = errors.New("url already exists")
 )
