@@ -1,0 +1,7 @@
+.env
+.env.*
+config.example.yaml
+
+.vscode/
+.git/
+bin/

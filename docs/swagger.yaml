@@ -1,0 +1,136 @@
+basePath: /api/v1
+definitions:
+  middleware.Error:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  middleware.ResponseError:
+    properties:
+      error:
+        $ref: '#/definitions/middleware.Error'
+    type: object
+  v1.CreateShortURLReq:
+    properties:
+      url:
+        type: string
+    required:
+    - url
+    type: object
+  v1.DataResp:
+    properties:
+      data: {}
+    type: object
+  v1.FullURLResp:
+    properties:
+      url:
+        type: string
+    type: object
+  v1.ShortURLResp:
+    properties:
+      short_url:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: URL Shortener service backend API.
+  title: URL Shortener API
+  version: "1.0"
+paths:
+  /urls:
+    post:
+      consumes:
+      - application/json
+      description: Generates a 10-character short URL from the provided full URL.
+      parameters:
+      - description: Original URL payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.CreateShortURLReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/v1.DataResp'
+            - properties:
+                data:
+                  $ref: '#/definitions/v1.ShortURLResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.ResponseError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.ResponseError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/middleware.ResponseError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a short URL
+      tags:
+      - urls
+  /urls/{short_url}:
+    get:
+      description: Retrieves the original full URL associated with the provided short
+        URL.
+      parameters:
+      - description: Short URL hash (10 characters)
+        in: path
+        name: short_url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/v1.DataResp'
+            - properties:
+                data:
+                  $ref: '#/definitions/v1.FullURLResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.ResponseError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.ResponseError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.ResponseError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Get original URL
+      tags:
+      - urls
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-API-Key
+    type: apiKey
+swagger: "2.0"
