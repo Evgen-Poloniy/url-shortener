@@ -1,0 +1,17 @@
+profile: coverage.out
+
+threshold:
+  total: 70
+
+exclude:
+  dir:
+    - ^cmd
+    - ^configs
+    - ^docs
+    - ^internal/app
+    - ^internal/config
+    - ^internal/domain
+    - ^internal/server
+    - ^migrations
+    - ^pkg
+    - ^tests
