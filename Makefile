@@ -39,6 +39,10 @@ mock:
 	go generate ./...
 .PHONY: mock
 
+migrate:
+	migrate create -ext sql -dir migrations -seq init_schema
+.PHONY: migrate
+
 swag-init:
 	swag init -g internal/app/app.go
 .PHONY: swag-init
