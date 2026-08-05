@@ -9,7 +9,6 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/Evgen-Poloniy/url-shortener/internal/config"
 	"github.com/Evgen-Poloniy/url-shortener/internal/repository/memory"
@@ -123,7 +122,7 @@ func Run() {
 
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
-		config.Server.TimeForGracefulShutdown*time.Second,
+		config.Server.TimeForGracefulShutdown,
 	)
 	defer cancel()
 

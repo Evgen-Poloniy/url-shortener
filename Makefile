@@ -27,9 +27,13 @@ run:
 .PHONY: run
 
 unit-test:
-	go test -cover -race -count=1 -v ./... -coverprofile=coverage.out
+	go test -cover -race -count=1 -v ./internal/... -coverprofile=coverage.out
 	go tool cover -func=coverage.out
 .PHONY: unit-test
+
+integration-test:
+	go test -race -count=1 -v ./tests/integration/...
+.PHONY: integration-test
 
 test-html:
 	go tool cover -html=coverage.out
@@ -39,16 +43,20 @@ mock:
 	go generate ./...
 .PHONY: mock
 
+migrate:
+	migrate create -ext sql -dir migrations -seq init_schema
+.PHONY: migrate
+
 swag-init:
-	swag init -g internal/app/app.go
+	swag init -g  $(CMD_API_DIR)/main.go
 .PHONY: swag-init
 
-build:
-	docker compose build
-.PHONY: build
+linter:
+	golangci-lint run
+.PHONY: linter
 
 up:
-	docker compose up -d
+	docker compose up -d --build
 .PHONY: up
 
 down:

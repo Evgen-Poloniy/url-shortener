@@ -1,6 +1,9 @@
 package domain
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type AppError struct {
 	Code    ErrCode
@@ -10,9 +13,13 @@ type AppError struct {
 
 func (e *AppError) Error() string {
 	if e.Err != nil {
-		return e.Err.Error()
+		return fmt.Sprintf("%s: %v", e.Message, e.Err)
 	}
 	return e.Message
+}
+
+func (e *AppError) Unwrap() error {
+	return e.Err
 }
 
 func NewAppError(code ErrCode, message string, err error) *AppError {
@@ -28,5 +35,6 @@ var (
 	ErrInvalidAPIKey     = errors.New("invalid API-Key")
 	ErrURLNotFound       = errors.New("URL not found")
 	ErrURLConflict       = errors.New("url already exists")
-	ErrDatabase          = errors.New("database error")
+	ErrInternalStorage   = errors.New("internal storage error")
+	ErrEmptyURL          = errors.New("url field is empty")
 )

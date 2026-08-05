@@ -14,7 +14,11 @@ const pgErrUniqueViolation = "23505"
 
 // SaveURL saves full and short URLs into repository.
 func (r *PostgresRepository) SaveURL(ctx context.Context, full, short string) error {
-	query := `INSERT INTO urls (full_url, short_url) VALUES ($1, $2);`
+	query := `
+		INSERT INTO urls (full_url, short_url)
+		VALUES ($1, $2)
+		ON CONFLICT (full_url) DO NOTHING;
+	`
 
 	_, err := r.db.ExecContext(ctx, query, full, short)
 	if err != nil {
@@ -24,7 +28,7 @@ func (r *PostgresRepository) SaveURL(ctx context.Context, full, short string) er
 			}
 		}
 
-		return fmt.Errorf("%w: %v", domain.ErrDatabase, err)
+		return fmt.Errorf("%w: %v", domain.ErrInternalStorage, err)
 	}
 
 	return nil
@@ -40,7 +44,7 @@ func (r *PostgresRepository) GetFullURL(ctx context.Context, short string) (stri
 		if errors.Is(err, sql.ErrNoRows) {
 			return "", domain.ErrURLNotFound
 		}
-		return "", fmt.Errorf("%w: %v", domain.ErrDatabase, err)
+		return "", fmt.Errorf("%w: %v", domain.ErrInternalStorage, err)
 	}
 
 	return full, nil

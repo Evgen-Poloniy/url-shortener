@@ -14,9 +14,7 @@ import (
 )
 
 func TestPostgresRepository_SaveURL(t *testing.T) {
-	t.Parallel()
-
-	const query = "INSERT INTO urls (full_url, short_url) VALUES ($1, $2);"
+	query := "INSERT INTO urls (full_url, short_url) VALUES ($1, $2) ON CONFLICT (full_url) DO NOTHING;"
 
 	testCases := []struct {
 		name      string
@@ -26,7 +24,7 @@ func TestPostgresRepository_SaveURL(t *testing.T) {
 		wantErr   error
 	}{
 		{
-			name:  "Success",
+			name:  "Success - New URL",
 			full:  "https://example.com",
 			short: "abc1234567",
 			mockSetup: func(mock sqlmock.Sqlmock) {
@@ -37,13 +35,24 @@ func TestPostgresRepository_SaveURL(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name:  "Conflict - Unique Violation",
+			name:  "Success - Same URL Idempotency (ON CONFLICT DO NOTHING)",
 			full:  "https://example.com",
+			short: "abc1234567",
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(query).
+					WithArgs("https://example.com", "abc1234567").
+					WillReturnResult(sqlmock.NewResult(0, 0))
+			},
+			wantErr: nil,
+		},
+		{
+			name:  "Conflict - Short Key Collision for Different URL",
+			full:  "https://another-domain.com",
 			short: "abc1234567",
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				pgErr := &pgconn.PgError{Code: pgErrUniqueViolation}
 				mock.ExpectExec(query).
-					WithArgs("https://example.com", "abc1234567").
+					WithArgs("https://another-domain.com", "abc1234567").
 					WillReturnError(pgErr)
 			},
 			wantErr: domain.ErrURLConflict,
@@ -57,17 +66,16 @@ func TestPostgresRepository_SaveURL(t *testing.T) {
 					WithArgs("https://example.com", "abc1234567").
 					WillReturnError(errors.New("db disconnect"))
 			},
-			wantErr: domain.ErrDatabase,
+			wantErr: domain.ErrInternalStorage,
 		},
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
 			db, mock := setupMockDB(t)
-			defer db.Close()
+			defer func() {
+				_ = db.Close()
+			}()
 
 			tc.mockSetup(mock)
 
@@ -127,17 +135,16 @@ func TestPostgresRepository_GetFullURL(t *testing.T) {
 					WillReturnError(errors.New("db disconnect"))
 			},
 			wantFull: "",
-			wantErr:  domain.ErrDatabase,
+			wantErr:  domain.ErrInternalStorage,
 		},
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
 			db, mock := setupMockDB(t)
-			defer db.Close()
+			defer func() {
+				_ = db.Close()
+			}()
 
 			tc.mockSetup(mock)
 

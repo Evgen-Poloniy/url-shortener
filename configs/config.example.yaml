@@ -10,7 +10,7 @@ server:
 # Logger config
 logger:
   level: info
-  format: text
+  format: json
 
 # CORS policy
 cors:
