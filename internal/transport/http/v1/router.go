@@ -13,7 +13,7 @@ func NewRouter(router *gin.Engine, handler *Handler) {
 		middleware.APIKeyAuth(handler.authConfig.ApiKey),
 	)
 	{
-		protected.POST("/urls")
-		protected.GET("/urls/:short_url")
+		protected.POST("/urls", handler.CreateShortURL)
+		protected.GET("/urls/:short_url", handler.GetFullURL)
 	}
 }
