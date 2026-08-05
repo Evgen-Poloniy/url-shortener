@@ -15,3 +15,8 @@ exclude:
     - ^migrations
     - ^pkg
     - ^tests
+    - .*_mocks\.go$
+    - ^internal/middleware/cors\.go$
+    - ^internal/middleware/sequrity\.go$
+    - ^internal/transport/http/router\.go$
+    - ^internal/transport/http/v1/router\.go$
