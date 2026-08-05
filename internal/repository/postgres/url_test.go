@@ -57,7 +57,7 @@ func TestPostgresRepository_SaveURL(t *testing.T) {
 					WithArgs("https://example.com", "abc1234567").
 					WillReturnError(errors.New("db disconnect"))
 			},
-			wantErr: domain.ErrDatabase,
+			wantErr: domain.ErrInternalStorage,
 		},
 	}
 
@@ -127,7 +127,7 @@ func TestPostgresRepository_GetFullURL(t *testing.T) {
 					WillReturnError(errors.New("db disconnect"))
 			},
 			wantFull: "",
-			wantErr:  domain.ErrDatabase,
+			wantErr:  domain.ErrInternalStorage,
 		},
 	}
 

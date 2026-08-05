@@ -24,7 +24,7 @@ func (r *PostgresRepository) SaveURL(ctx context.Context, full, short string) er
 			}
 		}
 
-		return fmt.Errorf("%w: %v", domain.ErrDatabase, err)
+		return fmt.Errorf("%w: %v", domain.ErrInternalStorage, err)
 	}
 
 	return nil
@@ -40,7 +40,7 @@ func (r *PostgresRepository) GetFullURL(ctx context.Context, short string) (stri
 		if errors.Is(err, sql.ErrNoRows) {
 			return "", domain.ErrURLNotFound
 		}
-		return "", fmt.Errorf("%w: %v", domain.ErrDatabase, err)
+		return "", fmt.Errorf("%w: %v", domain.ErrInternalStorage, err)
 	}
 
 	return full, nil
