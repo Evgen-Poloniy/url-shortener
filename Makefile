@@ -31,6 +31,10 @@ unit-test:
 	go tool cover -func=coverage.out
 .PHONY: unit-test
 
+integration-test:
+	go test -race -count=1 -v ./tests/integration/...
+.PHONY: integration-test
+
 test-html:
 	go tool cover -html=coverage.out
 .PHONY: cover-html
