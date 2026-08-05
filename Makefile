@@ -51,6 +51,10 @@ swag-init:
 	swag init -g  $(CMD_API_DIR)/main.go
 .PHONY: swag-init
 
+linter:
+	golangci-lint run
+.PHONY linter
+
 up:
 	docker compose up -d --build
 .PHONY: up
