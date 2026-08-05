@@ -1,20 +1,30 @@
 package v1
 
 import (
+	"context"
+
 	"github.com/Evgen-Poloniy/url-shortener/internal/config"
 )
 
+//go:generate mockgen -source=$GOFILE -destination=mocks/shortener_mocks.go -package=mock_shortener_service
+
+// UrlShortener represents the interface for save and get URLs.
 type UrlShortener interface {
+	// CreateShortURL creates short URL and saves full and short URLs into storage.
+	CreateShortURL(ctx context.Context, full string) error
+
+	// GetFullURL gets full URL from storage.
+	GetFullURL(ctx context.Context, short string) (string, error)
 }
 
 type Handler struct {
-	shortener  UrlShortener
-	authConfig *config.AuthConfig
+	shortenerService UrlShortener
+	authConfig       *config.AuthConfig
 }
 
-func NewHandler(shortener UrlShortener, authConfig *config.AuthConfig) *Handler {
+func NewHandler(shortenerService UrlShortener, authConfig *config.AuthConfig) *Handler {
 	return &Handler{
-		shortener:  shortener,
-		authConfig: authConfig,
+		shortenerService: shortenerService,
+		authConfig:       authConfig,
 	}
 }

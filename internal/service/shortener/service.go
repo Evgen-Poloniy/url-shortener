@@ -16,11 +16,11 @@ type ShortenerRepository interface {
 }
 
 type ShortenerService struct {
-	shortener ShortenerRepository
+	shortenerRepository ShortenerRepository
 }
 
-func NewShortenerService(shortener ShortenerRepository) *ShortenerService {
+func NewShortenerService(shortenerRepository ShortenerRepository) *ShortenerService {
 	return &ShortenerService{
-		shortener: shortener,
+		shortenerRepository: shortenerRepository,
 	}
 }
