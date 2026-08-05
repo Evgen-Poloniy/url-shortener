@@ -44,7 +44,7 @@ migrate:
 .PHONY: migrate
 
 swag-init:
-	swag init -g internal/app/app.go
+	swag init -g  $(CMD_API_DIR)/main.go
 .PHONY: swag-init
 
 build:

@@ -9,6 +9,19 @@ import (
 )
 
 // CreateShortURL handles POST /urls requests to generate a shortened URL.
+// @Summary      Create a short URL
+// @Description  Generates a 10-character short URL from the provided full URL.
+// @Tags         urls
+// @Accept       json
+// @Produce      json
+// @Param        request  body      CreateShortURLReq  true  "Original URL payload"
+// @Success      201      {object}  v1.DataResp{data=v1.ShortURLResp}
+// @Failure      400      {object}  middleware.ResponseError
+// @Failure      401      {object}  middleware.ResponseError
+// @Failure      409      {object}  middleware.ResponseError
+// @Failure      500      {object}  middleware.ResponseError
+// @Security     ApiKeyAuth
+// @Router       /urls [post]
 func (h *Handler) CreateShortURL(c *gin.Context) {
 	var req CreateShortURLReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -44,6 +57,19 @@ func (h *Handler) CreateShortURL(c *gin.Context) {
 }
 
 // GetFullURL handles GET /urls/:short_url requests to retrieve the original URL.
+//
+// @Summary      Get original URL
+// @Description  Retrieves the original full URL associated with the provided short URL.
+// @Tags         urls
+// @Produce      json
+// @Param        short_url  path      string  true  "Short URL hash (10 characters)"
+// @Success      200        {object}  v1.DataResp{data=v1.FullURLResp}
+// @Failure      400        {object}  middleware.ResponseError
+// @Failure      401        {object}  middleware.ResponseError
+// @Failure      404        {object}  middleware.ResponseError
+// @Failure      500        {object}  middleware.ResponseError
+// @Security     ApiKeyAuth
+// @Router       /urls/{short_url} [get]
 func (h *Handler) GetFullURL(c *gin.Context) {
 	shortURL := c.Param("short_url")
 	if shortURL == "" {
