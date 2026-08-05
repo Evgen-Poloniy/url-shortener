@@ -11,7 +11,7 @@ import (
 // UrlShortener represents the interface for save and get URLs.
 type UrlShortener interface {
 	// CreateShortURL creates short URL and saves full and short URLs into storage.
-	CreateShortURL(ctx context.Context, full string) error
+	CreateShortURL(ctx context.Context, full string) (string, error)
 
 	// GetFullURL gets full URL from storage.
 	GetFullURL(ctx context.Context, short string) (string, error)

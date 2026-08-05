@@ -26,8 +26,10 @@ var httpStatusMap = map[domain.ErrCode]int{
 	domain.CodeMissingAuthHeaders: http.StatusUnauthorized,
 	domain.CodeInvalidAPIKey:      http.StatusUnauthorized,
 	domain.CodeValidationError:    http.StatusBadRequest,
+	domain.CodeInvalidInput:       http.StatusBadRequest,
 	domain.CodeURLNotFound:        http.StatusNotFound,
 	domain.CodeURLConflict:        http.StatusConflict,
+	domain.CodeInternalStorage:    http.StatusInternalServerError,
 	domain.CodeInternal:           http.StatusInternalServerError,
 }
 

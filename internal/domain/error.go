@@ -36,4 +36,5 @@ var (
 	ErrURLNotFound       = errors.New("URL not found")
 	ErrURLConflict       = errors.New("url already exists")
 	ErrInternalStorage   = errors.New("internal storage error")
+	ErrEmptyURL          = errors.New("url field is empty")
 )
