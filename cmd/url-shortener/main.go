@@ -1,6 +1,11 @@
 package main
 
-import "github.com/Evgen-Poloniy/url-shortener/internal/app"
+import (
+	"github.com/Evgen-Poloniy/url-shortener/internal/app"
+
+	// Register pgx driver for sqlx.
+	_ "github.com/jackc/pgx/v5/stdlib"
+)
 
 // @title           URL Shortener API
 // @version         1.0

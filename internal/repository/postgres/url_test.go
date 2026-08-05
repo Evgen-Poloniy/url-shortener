@@ -73,7 +73,9 @@ func TestPostgresRepository_SaveURL(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			db, mock := setupMockDB(t)
-			defer db.Close()
+			defer func() {
+				_ = db.Close()
+			}()
 
 			tc.mockSetup(mock)
 
@@ -140,7 +142,9 @@ func TestPostgresRepository_GetFullURL(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			db, mock := setupMockDB(t)
-			defer db.Close()
+			defer func() {
+				_ = db.Close()
+			}()
 
 			tc.mockSetup(mock)
 

@@ -10,7 +10,7 @@ func APIKeyAuth(apiKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.GetHeader("X-API-Key")
 		if key == "" {
-			c.Error(domain.NewAppError(
+			_ = c.Error(domain.NewAppError(
 				domain.CodeMissingAuthHeaders,
 				domain.ErrMissingAuthHeader.Error(),
 				domain.ErrMissingAuthHeader,
@@ -20,7 +20,7 @@ func APIKeyAuth(apiKey string) gin.HandlerFunc {
 		}
 
 		if key != apiKey {
-			c.Error(domain.NewAppError(
+			_ = c.Error(domain.NewAppError(
 				domain.CodeInvalidAPIKey,
 				domain.ErrInvalidAPIKey.Error(),
 				domain.ErrInvalidAPIKey,

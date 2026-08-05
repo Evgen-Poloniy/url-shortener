@@ -20,7 +20,7 @@ func NewRouter(corsConfig *config.CORSConfig, logger *logrus.Logger) *gin.Engine
 	router.HandleMethodNotAllowed = true
 
 	router.NoRoute(func(c *gin.Context) {
-		c.Error(domain.NewAppError(
+		_ = c.Error(domain.NewAppError(
 			domain.CodeNotFound,
 			fmt.Sprintf("endpoint with URL %s not found", c.Request.URL.Path),
 			fmt.Errorf("endpoint with URL %s not found", c.Request.URL.Path),
@@ -29,7 +29,7 @@ func NewRouter(corsConfig *config.CORSConfig, logger *logrus.Logger) *gin.Engine
 	})
 
 	router.NoMethod(func(c *gin.Context) {
-		c.Error(domain.NewAppError(
+		_ = c.Error(domain.NewAppError(
 			domain.CodeMethodNotAllowed,
 			fmt.Sprintf("method %s for URL %s not allowed", c.Request.Method, c.Request.URL.Path),
 			fmt.Errorf("method %s for URL %s not allowed", c.Request.Method, c.Request.URL.Path),

@@ -1,0 +1,32 @@
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default-fast: true
+  enable:
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - bodyclose
+    - noctx
+    - sqlclosecheck
+    - gocritic
+    - copyloopvar
+    - makezero
+    - errcheck
+    - durationcheck
+    - gosec
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+linters-settings:
+  gci:
+    sections:
+      - standard
+      - default
