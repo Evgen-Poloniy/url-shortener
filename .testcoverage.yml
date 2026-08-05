@@ -4,7 +4,7 @@ threshold:
   total: 70
 
 exclude:
-  dir:
+  paths:
     - ^cmd
     - ^configs
     - ^docs
