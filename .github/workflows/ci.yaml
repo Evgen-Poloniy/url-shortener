@@ -20,6 +20,7 @@ jobs:
       - uses: golangci/golangci-lint-action@v6
         with:
           version: latest
+          install-mode: goinstall
 
   test:
     name: Run Tests & Coverage
@@ -67,6 +68,6 @@ jobs:
         run: go test -race -count=1 -v ./tests/integration/...
 
       - name: Check Coverage Threshold
-        uses: vladopajic/go-test-coverage@v2
+        uses: vladopajic/go-test-coverage-action@v2
         with:
-          config: .testcoverage.yml
+          config-path: .testcoverage.yml
