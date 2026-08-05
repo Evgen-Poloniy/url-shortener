@@ -9,7 +9,6 @@ import (
 	"github.com/Evgen-Poloniy/url-shortener/internal/service/shortener"
 	mock_shortener_repository "github.com/Evgen-Poloniy/url-shortener/internal/service/shortener/mocks"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/mock/gomock"
 )
 
 func TestShortenerService_CreateShortURL(t *testing.T) {
@@ -72,12 +71,10 @@ func TestShortenerService_CreateShortURL(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			mockRepo := mock_shortener_repository.NewMockShortenerRepository(ctrl)
+			svc, mockRepo := setupMock(t)
 
 			tc.mockSetup(mockRepo, tc.fullURL)
 
-			svc := shortener.NewShortenerService(mockRepo)
 			short, err := svc.CreateShortURL(ctx, tc.fullURL)
 
 			tc.checkErr(t, err)
@@ -152,12 +149,10 @@ func TestShortenerService_GetFullURL(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			mockRepo := mock_shortener_repository.NewMockShortenerRepository(ctrl)
+			svc, mockRepo := setupMock(t)
 
 			tc.mockSetup(mockRepo, tc.shortURL)
 
-			svc := shortener.NewShortenerService(mockRepo)
 			gotURL, err := svc.GetFullURL(ctx, tc.shortURL)
 
 			assert.Equal(t, tc.wantURL, gotURL)
@@ -197,7 +192,6 @@ func TestGenerateShortURL(t *testing.T) {
 			key2 := shortener.GenerateShortURL(tc.fullURL)
 
 			assert.Len(t, key1, 10, "Key length must be exactly 10")
-
 			assert.Equal(t, key1, key2, "GenerateShortURL must be deterministic")
 
 			for _, char := range key1 {
