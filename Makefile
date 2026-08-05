@@ -53,7 +53,7 @@ swag-init:
 
 linter:
 	golangci-lint run
-.PHONY linter
+.PHONY: linter
 
 up:
 	docker compose up -d --build

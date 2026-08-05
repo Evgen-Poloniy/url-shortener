@@ -3,7 +3,6 @@ run:
   tests: true
 
 linters:
-  default-fast: true
   enable:
     - gosimple
     - govet
