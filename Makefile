@@ -47,12 +47,8 @@ swag-init:
 	swag init -g  $(CMD_API_DIR)/main.go
 .PHONY: swag-init
 
-build:
-	docker compose build
-.PHONY: build
-
 up:
-	docker compose up -d
+	docker compose up -d --build
 .PHONY: up
 
 down:
