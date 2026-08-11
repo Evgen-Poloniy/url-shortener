@@ -1,7 +1,9 @@
 package v1
 
 import (
+	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/Evgen-Poloniy/url-shortener/internal/domain"
@@ -33,13 +35,19 @@ func (h *Handler) CreateShortURL(c *gin.Context) {
 		return
 	}
 
-	fullURL := strings.TrimSpace(req.URL)
-	if fullURL == "" {
+	rawURL := strings.TrimSpace(req.URL)
+	if rawURL == "" {
 		_ = c.Error(domain.NewAppError(
 			domain.CodeInvalidInput,
 			"url is required",
 			domain.ErrEmptyURL,
 		))
+		return
+	}
+
+	fullURL, err := h.validateFormatURL(rawURL)
+	if err != nil {
+		_ = c.Error(err)
 		return
 	}
 
@@ -72,11 +80,11 @@ func (h *Handler) CreateShortURL(c *gin.Context) {
 // @Router       /urls/{short_url} [get]
 func (h *Handler) GetFullURL(c *gin.Context) {
 	shortURL := c.Param("short_url")
-	if shortURL == "" {
+	if len(shortURL) != 10 {
 		_ = c.Error(domain.NewAppError(
 			domain.CodeInvalidInput,
-			"short_url parameter is required",
-			domain.ErrEmptyURL,
+			domain.ErrLenURL.Error(),
+			domain.ErrLenURL,
 		))
 		return
 	}
@@ -92,4 +100,52 @@ func (h *Handler) GetFullURL(c *gin.Context) {
 			URL: fullURL,
 		},
 	})
+}
+
+// validateFormatURL validates URL format and allowed protocols from config.
+func (h *Handler) validateFormatURL(rawURL string) (string, error) {
+	if !strings.Contains(rawURL, "://") {
+		return "", domain.NewAppError(
+			domain.CodeInvalidURL,
+			"URL must include protocol scheme (://)",
+			domain.ErrMissingScheme,
+		)
+	}
+
+	u, err := url.ParseRequestURI(rawURL)
+	if err != nil {
+		return "", domain.NewAppError(
+			domain.CodeInvalidURL,
+			"invalid URL format",
+			domain.ErrInvalidURLFormat,
+		)
+	}
+
+	if u.Host == "" {
+		return "", domain.NewAppError(
+			domain.CodeInvalidURL,
+			"URL host cannot be empty",
+			domain.ErrMissingHost,
+		)
+	}
+
+	currentScheme := strings.ToLower(u.Scheme)
+	allowed := false
+
+	for _, proto := range h.shortenerConfig.AllowedProtocols {
+		if strings.ToLower(strings.TrimSpace(proto)) == currentScheme {
+			allowed = true
+			break
+		}
+	}
+
+	if !allowed {
+		return "", domain.NewAppError(
+			domain.CodeInvalidURL,
+			fmt.Sprintf("protocol '%s' is not allowed", u.Scheme),
+			domain.ErrUnsupportedScheme,
+		)
+	}
+
+	return u.String(), nil
 }

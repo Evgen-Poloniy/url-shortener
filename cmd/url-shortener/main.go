@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/Evgen-Poloniy/url-shortener/internal/app"
 
 	// Register pgx driver for sqlx.
@@ -16,5 +18,9 @@ import (
 // @in header
 // @name X-API-Key
 func main() {
-	app.Run()
+	var storageType string
+	flag.StringVar(&storageType, "storage-type", "", "Storage type (postgres, memory)")
+	flag.Parse()
+
+	app.Run(storageType)
 }

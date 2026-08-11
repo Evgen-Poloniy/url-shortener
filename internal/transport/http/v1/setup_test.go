@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/Evgen-Poloniy/url-shortener/internal/config"
 	"github.com/Evgen-Poloniy/url-shortener/internal/domain"
 	v1 "github.com/Evgen-Poloniy/url-shortener/internal/transport/http/v1"
 	mock_shortener_service "github.com/Evgen-Poloniy/url-shortener/internal/transport/http/v1/mocks"
@@ -18,7 +19,9 @@ func init() {
 
 func setupMockService(ctrl *gomock.Controller) (*v1.Handler, *mock_shortener_service.MockUrlShortener) {
 	mockService := mock_shortener_service.NewMockUrlShortener(ctrl)
-	handler := v1.NewHandler(mockService, nil)
+	handler := v1.NewHandler(mockService, nil, &config.ShortenerConfig{
+		AllowedProtocols: []string{"http", "https"},
+	})
 
 	return handler, mockService
 }
@@ -35,7 +38,7 @@ func setupTestRouter(handler *v1.Handler) *gin.Engine {
 			if errors.As(err, &appErr) {
 				status := http.StatusInternalServerError
 				switch appErr.Code {
-				case domain.CodeInvalidInput:
+				case domain.CodeInvalidInput, domain.CodeInvalidURL, domain.CodeValidationError:
 					status = http.StatusBadRequest
 				case domain.CodeURLNotFound:
 					status = http.StatusNotFound
