@@ -29,7 +29,6 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-// setupTestDB create Docker test container with PostgreSQL.
 func setupTestDB(t *testing.T) (*sqlx.DB, func()) {
 	t.Helper()
 	ctx := context.Background()
@@ -70,7 +69,9 @@ func setupTestDB(t *testing.T) (*sqlx.DB, func()) {
 
 	teardown := func() {
 		_ = db.Close()
-		if err := pgContainer.Terminate(ctx); err != nil {
+		termCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := pgContainer.Terminate(termCtx); err != nil {
 			t.Logf("failed to terminate container: %v", err)
 		}
 	}
@@ -78,7 +79,6 @@ func setupTestDB(t *testing.T) (*sqlx.DB, func()) {
 	return db, teardown
 }
 
-// Check integration with PostgreSQL.
 func TestURLShortener_IntegrationPostgres(t *testing.T) {
 	db, cleanup := setupTestDB(t)
 	defer cleanup()
@@ -88,6 +88,9 @@ func TestURLShortener_IntegrationPostgres(t *testing.T) {
 		ApiKey: apiKey,
 	}
 	cfgCORS := config.CORSConfig{}
+	cfgShortener := config.ShortenerConfig{
+		AllowedProtocols: []string{"http", "https"},
+	}
 
 	logger := logs.NewLogrusLogger(
 		logs.WithLevel("error"),
@@ -96,7 +99,7 @@ func TestURLShortener_IntegrationPostgres(t *testing.T) {
 
 	repository := pg.NewPostgresRepository(db)
 	service := shortener.NewShortenerService(repository)
-	v1Handler := v1.NewHandler(service, &cfgAuth)
+	v1Handler := v1.NewHandler(service, &cfgAuth, &cfgShortener)
 
 	appRouter := router.NewRouter(&cfgCORS, logger)
 	v1.NewRouter(appRouter, v1Handler)
@@ -143,6 +146,36 @@ func TestURLShortener_IntegrationPostgres(t *testing.T) {
 				expectedErr:  domain.CodeInvalidInput,
 			},
 			{
+				name:         "POST /urls - Bad Request (Missing Protocol Scheme)",
+				method:       http.MethodPost,
+				path:         "/api/v1/urls",
+				apiKeyHeader: apiKey,
+				contentType:  "application/json",
+				body:         v1.CreateShortURLReq{URL: "example.com/no-scheme"},
+				expectedCode: http.StatusBadRequest,
+				expectedErr:  domain.CodeInvalidURL,
+			},
+			{
+				name:         "POST /urls - Bad Request (Unsupported Protocol)",
+				method:       http.MethodPost,
+				path:         "/api/v1/urls",
+				apiKeyHeader: apiKey,
+				contentType:  "application/json",
+				body:         v1.CreateShortURLReq{URL: "ftp://example.com/file"},
+				expectedCode: http.StatusBadRequest,
+				expectedErr:  domain.CodeInvalidURL,
+			},
+			{
+				name:         "POST /urls - Bad Request (Missing Host)",
+				method:       http.MethodPost,
+				path:         "/api/v1/urls",
+				apiKeyHeader: apiKey,
+				contentType:  "application/json",
+				body:         v1.CreateShortURLReq{URL: "https://"},
+				expectedCode: http.StatusBadRequest,
+				expectedErr:  domain.CodeInvalidURL,
+			},
+			{
 				name:         "POST /urls - Bad Request (Malformed JSON)",
 				method:       http.MethodPost,
 				path:         "/api/v1/urls",
@@ -155,7 +188,7 @@ func TestURLShortener_IntegrationPostgres(t *testing.T) {
 			{
 				name:         "GET /urls/{short_url} - Not Found",
 				method:       http.MethodGet,
-				path:         "/api/v1/urls/nonexistent123",
+				path:         "/api/v1/urls/notfound10",
 				apiKeyHeader: apiKey,
 				contentType:  "",
 				body:         nil,
@@ -274,7 +307,50 @@ func TestURLShortener_IntegrationPostgres(t *testing.T) {
 			}
 		})
 
-		t.Run("4. Concurrent URL Creation", func(t *testing.T) {
+		t.Run("4. Concurrent Creation of Same URL", func(t *testing.T) {
+			const numWorkers = 50
+			sharedURL := "https://example.com/shared-concurrent-link"
+			var wg sync.WaitGroup
+			wg.Add(numWorkers)
+
+			hashes := make([]string, numWorkers)
+
+			for i := 0; i < numWorkers; i++ {
+				go func(workerID int) {
+					defer wg.Done()
+
+					reqDTO := v1.CreateShortURLReq{URL: sharedURL}
+					reqBody, _ := json.Marshal(reqDTO)
+
+					req := httptest.NewRequest(http.MethodPost, "/api/v1/urls", bytes.NewBuffer(reqBody))
+					req.Header.Set("Content-Type", "application/json")
+					req.Header.Set("X-API-Key", apiKey)
+
+					w := httptest.NewRecorder()
+					appRouter.ServeHTTP(w, req)
+
+					assert.True(t, w.Code == http.StatusCreated || w.Code == http.StatusOK, "Worker %d failed with code %d", workerID, w.Code)
+
+					var resp v1.DataResp
+					if err := json.NewDecoder(w.Body).Decode(&resp); err == nil {
+						dataBytes, _ := json.Marshal(resp.Data)
+						var shortResp v1.ShortURLResp
+						_ = json.Unmarshal(dataBytes, &shortResp)
+						hashes[workerID] = shortResp.ShortURL
+					}
+				}(i)
+			}
+
+			wg.Wait()
+
+			firstHash := hashes[0]
+			assert.NotEmpty(t, firstHash)
+			for i := 1; i < numWorkers; i++ {
+				assert.Equal(t, firstHash, hashes[i], "Worker %d got different short_url", i)
+			}
+		})
+
+		t.Run("5. Concurrent Unique URL Creation", func(t *testing.T) {
 			const numWorkers = 100
 			var wg sync.WaitGroup
 			wg.Add(numWorkers)

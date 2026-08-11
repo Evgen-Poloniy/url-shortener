@@ -35,3 +35,10 @@ postgres:
   max_idle_conns: 25
   conn_max_lifetime: 5m # seconds, minutes
   conn_max_idle_lifetime: 2m # seconds, minutes
+
+# URL shortener config
+url_shortener:
+  allowed_protocols:
+  - http
+  - https
+  - ftp

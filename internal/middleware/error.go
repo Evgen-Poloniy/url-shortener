@@ -27,6 +27,7 @@ var httpStatusMap = map[domain.ErrCode]int{
 	domain.CodeInvalidAPIKey:      http.StatusUnauthorized,
 	domain.CodeValidationError:    http.StatusBadRequest,
 	domain.CodeInvalidInput:       http.StatusBadRequest,
+	domain.CodeInvalidURL:         http.StatusBadRequest,
 	domain.CodeURLNotFound:        http.StatusNotFound,
 	domain.CodeURLConflict:        http.StatusConflict,
 	domain.CodeInternalStorage:    http.StatusInternalServerError,

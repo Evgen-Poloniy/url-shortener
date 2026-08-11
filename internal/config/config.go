@@ -60,13 +60,19 @@ type AuthConfig struct {
 	ApiKey string `env:"API_KEY" env-required:"true"`
 }
 
+// ShortenerConfig represents config for URL shortener.
+type ShortenerConfig struct {
+	AllowedProtocols []string `yaml:"allowed_protocols" env-default:"true"`
+}
+
 // Config represents dataclass with all configs.
 type Config struct {
-	Server   ServerConfig   `yaml:"server"`
-	Logger   LoggerConfig   `yaml:"logger"`
-	CORS     CORSConfig     `yaml:"cors"`
-	Postgres PostgresConfig `yaml:"postgres"`
-	Auth     AuthConfig     `yaml:"auth"`
+	Server    ServerConfig    `yaml:"server"`
+	Logger    LoggerConfig    `yaml:"logger"`
+	CORS      CORSConfig      `yaml:"cors"`
+	Postgres  PostgresConfig  `yaml:"postgres"`
+	Auth      AuthConfig      `yaml:"auth"`
+	Shortener ShortenerConfig `yaml:"url_shortener"`
 }
 
 // Load config from config/config.yml.

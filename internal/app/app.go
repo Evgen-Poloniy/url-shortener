@@ -89,7 +89,7 @@ func Run(storageType string) {
 	}
 
 	service := shortener.NewShortenerService(repository)
-	v1Handler := v1.NewHandler(service, &cfg.Auth)
+	v1Handler := v1.NewHandler(service, &cfg.Auth, &cfg.Shortener)
 	router := router.NewRouter(&cfg.CORS, logger)
 	v1.NewRouter(router, v1Handler)
 
