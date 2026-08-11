@@ -5,7 +5,10 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/joho/godotenv"
 )
+
+const DefaultConfigPath = "configs/config.yml"
 
 // Config with tags from cleanenv library.
 type ServerConfig struct {
@@ -64,6 +67,10 @@ type Config struct {
 
 // Load config from config/config.yaml.
 func LoadConfig(path string) (*Config, error) {
+	if err := godotenv.Load(".env"); err != nil {
+		return nil, err
+	}
+
 	var config Config
 	if err := cleanenv.ReadConfig(path, &config); err != nil {
 		return nil, err

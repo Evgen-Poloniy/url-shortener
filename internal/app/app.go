@@ -27,11 +27,12 @@ import (
 func Run(storageType string) {
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
-		logrus.Fatalf("error when loading env CONFIG_PATH")
+		configPath = config.DefaultConfigPath
 	}
 
 	if storageType == "" {
-		logrus.Fatalf(`flag "storage-type" is required`)
+		storageType = "memory"
+		logrus.Warn(`flag "storage-type" is empty. Is used "storage-memory"`)
 	}
 
 	config, err := config.LoadConfig(configPath)
