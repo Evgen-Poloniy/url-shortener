@@ -51,6 +51,27 @@ func TestHandler_CreateShortURL(t *testing.T) {
 			expectedCode: http.StatusBadRequest,
 		},
 		{
+			name:         "Missing Protocol Scheme",
+			reqBody:      v1.CreateShortURLReq{URL: "example.com/path"},
+			urlInput:     "",
+			mockBehavior: func(m *mock_shortener_service.MockUrlShortener, url string) {},
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "Missing Host",
+			reqBody:      v1.CreateShortURLReq{URL: "https://"},
+			urlInput:     "",
+			mockBehavior: func(m *mock_shortener_service.MockUrlShortener, url string) {},
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "Unsupported Protocol",
+			reqBody:      v1.CreateShortURLReq{URL: "ftp://example.com/file"},
+			urlInput:     "",
+			mockBehavior: func(m *mock_shortener_service.MockUrlShortener, url string) {},
+			expectedCode: http.StatusBadRequest,
+		},
+		{
 			name:     "URL Conflict",
 			reqBody:  v1.CreateShortURLReq{URL: "https://example.com/existing"},
 			urlInput: "https://example.com/existing",
@@ -120,6 +141,23 @@ func TestHandler_GetFullURL(t *testing.T) {
 					Return("https://example.com/very/long/link", nil)
 			},
 			expectedCode: http.StatusOK,
+		},
+		{
+			name:          "Invalid Short URL Length (Handler Validation)",
+			shortURLParam: "invalid_len",
+			mockBehavior: func(m *mock_shortener_service.MockUrlShortener, shortURL string) {
+			},
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:          "Invalid Input from Service",
+			shortURLParam: "invalid100",
+			mockBehavior: func(m *mock_shortener_service.MockUrlShortener, shortURL string) {
+				m.EXPECT().
+					GetFullURL(gomock.Any(), shortURL).
+					Return("", domain.NewAppError(domain.CodeInvalidInput, "invalid short url format", domain.ErrInvalidURLFormat))
+			},
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:          "URL Not Found",

@@ -20,11 +20,13 @@ type UrlShortener interface {
 type Handler struct {
 	shortenerService UrlShortener
 	authConfig       *config.AuthConfig
+	shortenerConfig  *config.ShortenerConfig
 }
 
-func NewHandler(shortenerService UrlShortener, authConfig *config.AuthConfig) *Handler {
+func NewHandler(shortenerService UrlShortener, authConfig *config.AuthConfig, shortenerConfig *config.ShortenerConfig) *Handler {
 	return &Handler{
 		shortenerService: shortenerService,
 		authConfig:       authConfig,
+		shortenerConfig:  shortenerConfig,
 	}
 }

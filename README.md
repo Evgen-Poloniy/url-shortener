@@ -51,9 +51,12 @@ The service supports dual storage backends: an in-memory storage implementation 
 │   │   └── postgres/        # PostgreSQL store
 │   ├── service/
 │   │   └── shortener/       # Business logic (URL generator and shortener service)
-│   └── transport/
-│       └── http/
-│           └── v1/          # REST API HTTP handlers
+│   ├── transport/
+│   │   └── http/
+│   │        └── v1/         # REST API HTTP handlers
+│   └── pkg/                 # Shared packages
+│       ├── database/        # PostgreSQL initialization
+│       └── logs/            # Logrus logger initialization
 ├── migrations/              # SQL migration files
 ├── tests/
 │   └── integration/         # Integration test suites
@@ -87,7 +90,6 @@ The service can be configured via environment variables or a YAML configuration 
 | API_HOST | Host address to bind HTTP server |
 | API_PORT | Port to listen on |
 | API_KEY | Secret API key for protected routes |
-| STORAGE_TYPE | Storage backend (postgres or memory) |
 | DB_HOST | PostgreSQL database host |
 | DB_PORT | PostgreSQL database port |
 | DB_USER | PostgreSQL user |
@@ -99,26 +101,27 @@ The service can be configured via environment variables or a YAML configuration 
 
 ## Running the Application
 
-### Option 1: Docker Compose (Recommended)
+### Option 1: Docker Compose (Storage type "postgres")
 
-To run the complete setup (App + PostgreSQL) using Docker:
+To run the complete setup (App + Migrate + PostgreSQL) using Docker:
 ```bash
-make up
+make up-postgres
 ```
 To stop and tear down containers:
 ```bash
 make down
 ```
-### Option 2: Local Execution
 
-1. Ensure PostgreSQL is running if using STORAGE_TYPE=postgres.
-2. Launch the application:
+### Option 2: Docker (Storage type "memory")
+
+To run App with RAM memory storage:
 ```bash
-make run
+make up-memory
 ```
-Alternatively, to build the binary and launch it:
+
+To stop container:
 ```bash
-make launch
+make down
 ```
 ---
 
@@ -216,15 +219,12 @@ make integration-test
 
 | Command | Action |
 | :--- | :--- |
-| make build | Compiles the application binary into ./bin/url-shortener |
-| make run | Runs the main Go package directly (go run) |
-| make launch | Cleans, builds, and launches the compiled binary |
 | make unit-test | Runs unit tests across /internal/... with -race and coverage |
 | make integration-test | Runs integration test suites |
 | make test-html | Opens HTML code coverage report |
 | make mock | Triggers go generate ./... to update interface mocks |
-| make migrate | Generates a new SQL migration file pair in migrations/ |
 | make swag-init | Regenerates OpenAPI/Swagger specification files |
-| make up | Builds images and starts Docker Compose services in detached mode |
+| make up-postgres | Builds images and starts Docker Compose services with PostgreSQL storage type in detached mode |
+| make up-memory | Builds images and starts Docker Compose services with RAM memory storage type in detached mode |
+| make migrate | Generates a new SQL migration file pair in migrations/ |
 | make down | Stops and removes Docker Compose resources |
-| make clean | Removes compiled binaries from bin/ |

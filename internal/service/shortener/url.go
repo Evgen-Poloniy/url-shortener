@@ -13,6 +13,7 @@ import (
 const (
 	alphabet    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
 	shortUrlLen = 10
+	base        = uint64(len(alphabet))
 )
 
 // CreateShortURL creates short URL and saves full and short URLs into storage.
@@ -65,7 +66,6 @@ func GenerateShortURL(url string) string {
 	hash := sha256.Sum256([]byte(url))
 
 	num := binary.BigEndian.Uint64(hash[:8])
-	base := uint64(len(alphabet))
 
 	var result [shortUrlLen]byte
 
