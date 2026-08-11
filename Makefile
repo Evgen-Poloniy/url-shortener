@@ -5,6 +5,7 @@ GOOS := linux
 GOARCH := amd64
 CMD_API_DIR := cmd/url-shortener
 BIN_DIR := bin
+STORAGE_TYPE := postgres
 
 GO_ENV_VAR := GOGC=$(GOGC) CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH)
 FLAGS := -ldflags="-s -w"
@@ -19,11 +20,11 @@ $(TARGET):
 	$(GO_ENV_VAR) go build $(FLAGS) -o $(BIN_DIR)/$(TARGET) $(CMD_API_DIR)/main.go
 
 launch: clean all
-	./$(BIN_DIR)/$(TARGET)
+	./$(BIN_DIR)/$(TARGET) -storage-type=$(STORAGE_TYPE)
 .PHONY: launch
 
 run:
-	go run $(CMD_API_DIR)/main.go
+	go run $(CMD_API_DIR)/main.go -storage-type=$(STORAGE_TYPE)
 .PHONY: run
 
 unit-test:

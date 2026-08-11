@@ -24,15 +24,14 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func Run() {
+func Run(storageType string) {
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
 		logrus.Fatalf("error when loading env CONFIG_PATH")
 	}
 
-	storageType := os.Getenv("STORAGE_TYPE")
 	if storageType == "" {
-		logrus.Warn("env STORAGE is not set. Is used STORAGE_TYPE=memory")
+		logrus.Fatalf(`flag "storage-type" is required`)
 	}
 
 	config, err := config.LoadConfig(configPath)
