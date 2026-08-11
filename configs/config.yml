@@ -41,4 +41,3 @@ url_shortener:
   allowed_protocols:
   - http
   - https
-  - ftp
