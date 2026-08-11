@@ -1,5 +1,5 @@
 .vscode
 .env
-config.yaml
+config.yml
 coverage.out
 bin

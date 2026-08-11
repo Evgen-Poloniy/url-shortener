@@ -20,5 +20,6 @@ WORKDIR /app
 RUN apk add --no-cache curl
 
 COPY --from=builder /app/bin/app ./
+COPY --from=builder /app/configs ./configs
 
 CMD ["./app"]

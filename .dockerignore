@@ -1,6 +1,6 @@
 .env
 .env.*
-config.example.yaml
+config.example.yml
 
 .vscode/
 .git/
