@@ -21,7 +21,7 @@ type ServerConfig struct {
 	IdleTimeout             time.Duration `yaml:"idle_timeout" env-default:"60s"`
 }
 
-// Logger config from config.yaml.
+// Logger config from config.yml.
 type LoggerConfig struct {
 	Level  string `yaml:"level" env-default:"info" validate:"oneof=trace debug info warn error panic fatal"`
 	Format string `yaml:"format" env-default:"json" validate:"oneof=text json"`
@@ -64,7 +64,7 @@ type Config struct {
 	Auth     AuthConfig     `yaml:"auth"`
 }
 
-// Load config from config/config.yaml.
+// Load config from config/config.yml.
 func LoadConfig(path string) (*Config, error) {
 	var config Config
 	if err := cleanenv.ReadConfig(path, &config); err != nil {
