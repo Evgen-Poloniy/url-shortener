@@ -8,8 +8,6 @@ services:
       POSTGRES_USER: ${DB_USER:-url-shortener}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-12345}
       POSTGRES_DB: ${DB_NAME:-url-shortener-db}
-    ports:
-      - "${DB_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
