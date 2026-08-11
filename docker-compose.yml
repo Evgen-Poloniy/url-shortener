@@ -1,18 +1,19 @@
 name: url-shortener-service
+
 services:
   postgres:
     image: postgres:16-alpine
     container_name: url-shortener-postgres
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER:-url-shortener}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-12345}
+      POSTGRES_DB: ${DB_NAME:-url-shortener-db}
     ports:
-      - "${DB_PORT}:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-url-shortener} -d ${DB_NAME:-url-shortener-db}"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -26,36 +27,36 @@ services:
       - ./migrations:/migrations
     command:
       - -path=/migrations
-      - -database=postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/${DB_NAME}?sslmode=${SSL_MODE}
+      - -database=postgres://${DB_USER:-url-shortener}:${DB_PASSWORD:-12345}@${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME:-url-shortener-db}?sslmode=${SSL_MODE:-disable}
       - up
     depends_on:
       postgres:
         condition: service_healthy
 
-  app:
+  app-postgres:
     build:
       context: .
       dockerfile: Dockerfile
     image: url-shortener-image
-    container_name: url-shortener
+    container_name: url-shortener-postgres-app
+    command: ["-storage-type=postgres"]
     volumes:
-      - ./configs:/app/configs
+      - ./configs:/app/configs:ro
     ports:
-      - "${API_PORT}:8080"
+      - "${API_PORT:-8080}:8080"
     environment:
-      CONFIG_PATH: ${CONFIG_PATH}
-      API_KEY: ${API_KEY}
-      API_HOST: ${API_HOST}
-      API_PORT: ${API_PORT}
-      STORAGE_TYPE: ${STORAGE_TYPE}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      SSL_MODE: ${SSL_MODE}
+      CONFIG_PATH: ${CONFIG_PATH:-configs/config.yml}
+      API_KEY: ${API_KEY:-12345}
+      API_HOST: ${API_HOST:-0.0.0.0}
+      API_PORT: ${API_PORT:-8080}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER:-url-shortener}
+      DB_PASSWORD: ${DB_PASSWORD:-12345}
+      DB_NAME: ${DB_NAME:-url-shortener-db}
+      SSL_MODE: ${SSL_MODE:-disable}
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:${API_PORT}/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -65,6 +66,30 @@ services:
         condition: service_healthy
       migrations:
         condition: service_completed_successfully
+    restart: unless-stopped
+
+  app-memory:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: url-shortener-image
+    container_name: url-shortener-memory-app
+    command: ["-storage-type=memory"]
+    volumes:
+      - ./configs:/app/configs:ro
+    ports:
+      - "${API_PORT:-8080}:8080"
+    environment:
+      CONFIG_PATH: ${CONFIG_PATH:-configs/config.yml}
+      API_KEY: ${API_KEY:-12345}
+      API_HOST: ${API_HOST:-0.0.0.0}
+      API_PORT: ${API_PORT:-8080}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     restart: unless-stopped
 
 volumes:

@@ -1,5 +1,5 @@
 TARGET := url-shortener
-CGO_ENABLED := 1
+CGO_ENABLED := 0
 GOGC := 100
 GOOS := linux
 GOARCH := amd64
@@ -37,7 +37,7 @@ integration-test:
 
 test-html:
 	go tool cover -html=coverage.out
-.PHONY: cover-html
+.PHONY: test-html
 
 mock:
 	go generate ./...
@@ -55,8 +55,12 @@ linter:
 	golangci-lint run
 .PHONY: linter
 
-up:
-	docker compose up -d --build
+up-postgres:
+	docker compose up app-postgres -d --build
+.PHONY: up
+
+up-memory:
+	docker compose up app-memory -d --build
 .PHONY: up
 
 down:

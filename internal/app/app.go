@@ -31,18 +31,18 @@ func Run(storageType string) {
 	}
 
 	if storageType == "" {
-		storageType = "memory"
+		storageType = config.MemoryStorageType
 		logrus.Warn(`flag "storage-type" is empty. Is used "storage-memory"`)
 	}
 
-	config, err := config.LoadConfig(configPath)
+	cfg, err := config.LoadConfig(configPath, storageType)
 	if err != nil {
 		logrus.Fatalf("error when loading config: %v", err)
 	}
 
 	logger := logs.NewLogrusLogger(
-		logs.WithLevel(config.Logger.Level),
-		logs.WithFormat(config.Logger.Format),
+		logs.WithLevel(cfg.Logger.Level),
+		logs.WithFormat(cfg.Logger.Format),
 	)
 
 	// Layers initialization.
@@ -51,22 +51,22 @@ func Run(storageType string) {
 
 	// Repository type choice.
 	switch storageType {
-	case "postgres":
+	case config.PostgresStorageType:
 		dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-			config.Postgres.Host,
-			config.Postgres.Port,
-			config.Postgres.Username,
-			config.Postgres.Password,
-			config.Postgres.DBName,
-			config.Postgres.SSLMode,
+			cfg.Postgres.Host,
+			cfg.Postgres.Port,
+			cfg.Postgres.Username,
+			cfg.Postgres.Password,
+			cfg.Postgres.DBName,
+			cfg.Postgres.SSLMode,
 		)
 
 		db, err := postgres.NewPostgreSQL(
 			dsn,
-			postgres.WithMaxOpenConns(config.Postgres.MaxOpenConns),
-			postgres.WithMaxIdleConns(config.Postgres.MaxIdleConns),
-			postgres.WithConnMaxLifetime(config.Postgres.ConnMaxLifetime),
-			postgres.WithConnMaxIdleLifetime(config.Postgres.ConnMaxIdleLifetime),
+			postgres.WithMaxOpenConns(cfg.Postgres.MaxOpenConns),
+			postgres.WithMaxIdleConns(cfg.Postgres.MaxIdleConns),
+			postgres.WithConnMaxLifetime(cfg.Postgres.ConnMaxLifetime),
+			postgres.WithConnMaxIdleLifetime(cfg.Postgres.ConnMaxIdleLifetime),
 		)
 		if err != nil {
 			logger.Fatalf("database error: %v", err)
@@ -89,17 +89,17 @@ func Run(storageType string) {
 	}
 
 	service := shortener.NewShortenerService(repository)
-	v1Handler := v1.NewHandler(service, &config.Auth)
-	router := router.NewRouter(&config.CORS, logger)
+	v1Handler := v1.NewHandler(service, &cfg.Auth)
+	router := router.NewRouter(&cfg.CORS, logger)
 	v1.NewRouter(router, v1Handler)
 
 	httpServer := httpserver.NewServer(router,
-		httpserver.WithAddr(config.Server.Host, config.Server.Port),
-		httpserver.WithMaxHeaderBytes(config.Server.MaxHeaderBytes),
-		httpserver.WithReadTimeout(config.Server.ReadTimeout),
-		httpserver.WithWriteTimeout(config.Server.WriteTimeout),
-		httpserver.WithReadHeaderTimeout(config.Server.ReadHeaderTimeout),
-		httpserver.WithIdleTimeout(config.Server.IdleTimeout),
+		httpserver.WithAddr(cfg.Server.Host, cfg.Server.Port),
+		httpserver.WithMaxHeaderBytes(cfg.Server.MaxHeaderBytes),
+		httpserver.WithReadTimeout(cfg.Server.ReadTimeout),
+		httpserver.WithWriteTimeout(cfg.Server.WriteTimeout),
+		httpserver.WithReadHeaderTimeout(cfg.Server.ReadHeaderTimeout),
+		httpserver.WithIdleTimeout(cfg.Server.IdleTimeout),
 	)
 
 	var wg sync.WaitGroup
@@ -108,7 +108,7 @@ func Run(storageType string) {
 	go func() {
 		defer wg.Done()
 
-		logger.Infof("http server is running on %s", fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port))
+		logger.Infof("http server is running on %s", fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port))
 		if err := httpServer.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Errorf("http server error: %v", err)
 		}
@@ -122,7 +122,7 @@ func Run(storageType string) {
 
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
-		config.Server.TimeForGracefulShutdown,
+		cfg.Server.TimeForGracefulShutdown,
 	)
 	defer cancel()
 

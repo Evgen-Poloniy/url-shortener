@@ -1,13 +1,18 @@
 package config
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
-const DefaultConfigPath = "configs/config.yml"
+const (
+	DefaultConfigPath   = "configs/config.yml"
+	PostgresStorageType = "postgres"
+	MemoryStorageType   = "memory"
+)
 
 // Config with tags from cleanenv library.
 type ServerConfig struct {
@@ -38,12 +43,12 @@ type CORSConfig struct {
 
 // PostgresConfig represents config from env and config.yaml.
 type PostgresConfig struct {
-	Host                string        `env:"DB_HOST" env-required:"true"`
-	Port                string        `env:"DB_PORT" env-required:"true"`
-	Username            string        `env:"DB_USER" env-required:"true"`
-	Password            string        `env:"DB_PASSWORD" env-required:"true"`
-	DBName              string        `env:"DB_NAME" env-required:"true"`
-	SSLMode             string        `env:"SSL_MODE" env-required:"true" validate:"oneof=disable require"`
+	Host                string        `env:"DB_HOST" validate:"required"`
+	Port                string        `env:"DB_PORT" validate:"required"`
+	Username            string        `env:"DB_USER" validate:"required"`
+	Password            string        `env:"DB_PASSWORD" validate:"required"`
+	DBName              string        `env:"DB_NAME" validate:"required"`
+	SSLMode             string        `env:"SSL_MODE" validate:"required,oneof=disable require"`
 	MaxOpenConns        int           `yaml:"max_open_conns" env-default:"25"`
 	MaxIdleConns        int           `yaml:"max_idle_conns" env-default:"25"`
 	ConnMaxLifetime     time.Duration `yaml:"conn_max_lifetime" env-default:"5m"`
@@ -65,16 +70,26 @@ type Config struct {
 }
 
 // Load config from config/config.yml.
-func LoadConfig(path string) (*Config, error) {
-	var config Config
-	if err := cleanenv.ReadConfig(path, &config); err != nil {
+func LoadConfig(path string, storageType string) (*Config, error) {
+	var cfg Config
+	if err := cleanenv.ReadConfig(path, &cfg); err != nil {
 		return nil, err
 	}
 
 	validate := validator.New()
-	if err := validate.Struct(config); err != nil {
-		return nil, err
+
+	if err := validate.Struct(cfg.Logger); err != nil {
+		return nil, fmt.Errorf("invalid logger config: %w", err)
+	}
+	if err := validate.Struct(cfg.CORS); err != nil {
+		return nil, fmt.Errorf("invalid CORS config:  %w", err)
 	}
 
-	return &config, nil
+	if storageType == PostgresStorageType {
+		if err := validate.Struct(cfg.Postgres); err != nil {
+			return nil, fmt.Errorf("invalid postgres config: %w", err)
+		}
+	}
+
+	return &cfg, nil
 }
