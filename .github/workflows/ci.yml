@@ -19,28 +19,11 @@ jobs:
 
       - uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
-          install-mode: goinstall
+          version: v1.60.3
 
   test:
     name: Run Tests & Coverage
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
 
@@ -49,22 +32,10 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
 
-      - name: Run Migrations
-        run: |
-          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
-          ./migrate -path ./migrations -database "postgres://test_user:test_password@localhost:5432/test_db?sslmode=disable" up
-
       - name: Run Unit Tests
         run: go test -cover -race -count=1 -v ./internal/... -coverprofile=coverage.out
 
       - name: Run Integration Tests
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USER: test_user
-          DB_PASSWORD: test_password
-          DB_NAME: test_db
-          SSL_MODE: disable
         run: go test -race -count=1 -v ./tests/integration/...
 
       - name: Check Coverage Threshold
